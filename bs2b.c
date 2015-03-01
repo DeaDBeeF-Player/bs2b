@@ -35,8 +35,8 @@ ddb_bs2b_open (void) {
     ddb_bs2b_t *bs2b = malloc (sizeof (ddb_bs2b_t));
     DDB_INIT_DSP_CONTEXT (bs2b, ddb_bs2b_t, &plugin);
 
-    bs2b->xfeed = 700;
-    bs2b->cutoff = 45;
+    bs2b->xfeed = 45;
+    bs2b->cutoff = 700;
     bs2b->savedrate = 44100;
     bs2b->dp = bs2b_open ();
     return (ddb_dsp_context_t *)bs2b;
@@ -93,21 +93,21 @@ ddb_bs2b_set_param (ddb_dsp_context_t *_bs2b, int p, const char *val) {
     switch (p) {
     case BS2B_PARAM_XFEED:
         trace ("ddb_bs2b_set_param: xfeed set to %s\n", val);
-        bs2b->xfeed = (uint16_t)(atof (val) * 100);
+        bs2b->xfeed = (uint16_t)(atof (val) * 10);
         // returning here needed to stop bs2b_set_level being called twice
         // should probably come up with a less hacky solution
         return; // break;
     case BS2B_PARAM_CUTOFF:
         trace ("ddb_bs2b_set_param: cutoff set to %s\n", val);
-        bs2b->cutoff = (uint16_t)(atof (val) / 10);
+        bs2b->cutoff = (uint16_t)(atof (val));
         break;
     default:
         fprintf (stderr, "ddb_bs2b_set_param: invalid param index (%d)\n", p);
         return;
     }
 
-    trace ("ddb_bs2b_set_param: bs2b_set_level called with %d, %d)\n", (uint32_t)bs2b->xfeed, (uint32_t)bs2b->cutoff);
-    bs2b_set_level (bs2b->dp, (uint32_t)bs2b->xfeed | ((uint32_t)bs2b->cutoff << 16));
+    trace ("ddb_bs2b_set_param: bs2b_set_level called with %d, %d)\n", (uint32_t)bs2b->cutoff, (uint32_t)bs2b->xfeed);
+    bs2b_set_level (bs2b->dp, (uint32_t)bs2b->cutoff | ((uint32_t)bs2b->xfeed << 16));
 }
 
 void
@@ -116,10 +116,10 @@ ddb_bs2b_get_param (ddb_dsp_context_t *_bs2b, int p, char *val, int sz) {
 
     switch (p) {
     case BS2B_PARAM_XFEED:
-        snprintf (val, sz, "%f", (float)bs2b->xfeed / 100);
+        snprintf (val, sz, "%f", (float)bs2b->xfeed / 10);
         break;
     case BS2B_PARAM_CUTOFF:
-        snprintf (val, sz, "%f", 10*(float)bs2b->cutoff);
+        snprintf (val, sz, "%f", (float)bs2b->cutoff);
         break;
     default:
         fprintf (stderr, "ddb_bs2b_get_param: invalid param index (%d)\n", p);
