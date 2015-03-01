@@ -1,6 +1,6 @@
 /*
     Bauer stereophonic-to-binaural plugin for DeaDBeeF
-    Copyright (C) 2010 Steven McDonald <steven.mcdonald@libremail.me>
+    Copyright (C) 2010 Steven McDonald <steven@steven-mcdonald.id.au>
     See COPYING file for modification and redistribution conditions.
 */
 
@@ -139,7 +139,7 @@ static DB_dsp_t plugin = {
     .plugin.id = "bs2b",
     .plugin.name = "Headphone crossfeed",
     .plugin.descr = "Headphone crossfeed plugin using libbs2b by Boris Mikhaylov",
-    .plugin.copyright = "Copyright (C) 2010-2011 Steven McDonald <steven.mcdonald@libremail.me>",
+    .plugin.copyright = "Copyright (C) 2010-2011 Steven McDonald <steven@steven-mcdonald.id.au>",
     .plugin.website = "http://gitorious.org/deadbeef-sm-plugins/pages/Home",
     .num_params = ddb_bs2b_num_params,
     .get_param_name = ddb_bs2b_get_param_name,
