@@ -37,7 +37,7 @@ ddb_bs2b_open (void) {
 
     bs2b->xfeed = 45;
     bs2b->cutoff = 700;
-    bs2b->savedrate = 44100;
+    bs2b->savedrate = -1;
     bs2b->dp = bs2b_open ();
     return (ddb_dsp_context_t *)bs2b;
 }
