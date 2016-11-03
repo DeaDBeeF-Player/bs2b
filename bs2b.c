@@ -1,6 +1,9 @@
 /*
     Bauer stereophonic-to-binaural plugin for DeaDBeeF
+
     Copyright (C) 2010 Steven McDonald <steven@steven-mcdonald.id.au>
+    Copyright (C) 2016 Alexey Yakovenko
+
     See COPYING file for modification and redistribution conditions.
 */
 
@@ -28,6 +31,7 @@ typedef struct {
     uint16_t xfeed;
     uint16_t cutoff;
     int savedrate;
+    int changed;
 } ddb_bs2b_t;
 
 ddb_dsp_context_t*
@@ -58,6 +62,13 @@ ddb_bs2b_process (ddb_dsp_context_t *_bs2b, float *samples, int frames, int maxf
         bs2b_set_srate (bs2b->dp, (uint32_t)fmt->samplerate);
         bs2b->savedrate = fmt->samplerate;
     }
+    if (bs2b->changed) {
+        bs2b->changed = 0;
+
+        trace ("ddb_bs2b_set_param: bs2b_set_level called with %d, %d)\n", (uint32_t)bs2b->cutoff, (uint32_t)bs2b->xfeed);
+        bs2b_set_level (bs2b->dp, (uint32_t)bs2b->cutoff | ((uint32_t)bs2b->xfeed << 16));
+    }
+
     bs2b_cross_feed_f (bs2b->dp, samples, frames);
     return frames;
 }
@@ -94,20 +105,14 @@ ddb_bs2b_set_param (ddb_dsp_context_t *_bs2b, int p, const char *val) {
     case BS2B_PARAM_XFEED:
         trace ("ddb_bs2b_set_param: xfeed set to %s\n", val);
         bs2b->xfeed = (uint16_t)(atof (val) * 10);
-        // returning here needed to stop bs2b_set_level being called twice
-        // should probably come up with a less hacky solution
-        return; // break;
+        bs2b->changed = 1;
+        break;
     case BS2B_PARAM_CUTOFF:
         trace ("ddb_bs2b_set_param: cutoff set to %s\n", val);
         bs2b->cutoff = (uint16_t)(atof (val));
+        bs2b->changed = 1;
         break;
-    default:
-        fprintf (stderr, "ddb_bs2b_set_param: invalid param index (%d)\n", p);
-        return;
     }
-
-    trace ("ddb_bs2b_set_param: bs2b_set_level called with %d, %d)\n", (uint32_t)bs2b->cutoff, (uint32_t)bs2b->xfeed);
-    bs2b_set_level (bs2b->dp, (uint32_t)bs2b->cutoff | ((uint32_t)bs2b->xfeed << 16));
 }
 
 void
@@ -121,8 +126,6 @@ ddb_bs2b_get_param (ddb_dsp_context_t *_bs2b, int p, char *val, int sz) {
     case BS2B_PARAM_CUTOFF:
         snprintf (val, sz, "%f", (float)bs2b->cutoff);
         break;
-    default:
-        fprintf (stderr, "ddb_bs2b_get_param: invalid param index (%d)\n", p);
     }
 }
 
@@ -132,15 +135,36 @@ static const char ddb_bs2b_dialog[] =
 ;
 
 static DB_dsp_t plugin = {
-    DB_PLUGIN_SET_API_VERSION
+    .plugin.api_vmajor = 1,
+    .plugin.api_vminor = 0,
     .plugin.version_major = 0,
     .plugin.version_minor = 2,
     .plugin.type = DB_PLUGIN_DSP,
     .plugin.id = "bs2b",
-    .plugin.name = "Headphone crossfeed",
-    .plugin.descr = "Headphone crossfeed plugin using libbs2b by Boris Mikhaylov",
-    .plugin.copyright = "Copyright (C) 2010-2011 Steven McDonald <steven@steven-mcdonald.id.au>",
-    .plugin.website = "http://gitorious.org/deadbeef-sm-plugins/pages/Home",
+    .plugin.name = "Headphone crossfeed (bs2b)",
+    .plugin.descr = "Headphone crossfeed plugin using libbs2b by Boris Mikhaylov.\n\n"
+        "Please note, that this effect only works for stereo sound.\n",
+    .plugin.copyright =
+        "Copyright (C) 2010-2011 Steven McDonald <steven@steven-mcdonald.id.au>\n"
+        "Copyright (C) 2016 Alexey Yakovenko\n\n"
+        "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+        "of this software and associated documentation files (the \"Software\"), to deal\n"
+        "in the Software without restriction, including without limitation the rights\n"
+        "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+        "copies of the Software, and to permit persons to whom the Software is\n"
+        "furnished to do so, subject to the following conditions:\n"
+        "\n"
+        "The above copyright notice and this permission notice shall be included in\n"
+        "all copies or substantial portions of the Software.\n"
+        "\n"
+        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+        "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+        "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+        "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+        "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n"
+        "THE SOFTWARE.\n",
+    .plugin.website = "https://github.com/Alexey-Yakovenko/bs2b",
     .num_params = ddb_bs2b_num_params,
     .get_param_name = ddb_bs2b_get_param_name,
     .set_param = ddb_bs2b_set_param,
@@ -153,7 +177,7 @@ static DB_dsp_t plugin = {
 };
 
 DB_plugin_t *
-bs2b_load (DB_functions_t *api) {
+ddb_bs2b_load (DB_functions_t *api) {
     deadbeef = api;
     return DB_PLUGIN (&plugin);
 }
