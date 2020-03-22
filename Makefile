@@ -1,16 +1,18 @@
 OUT?=ddb_bs2b.so
 
-BS2B_LIBS?=-lbs2b
-CFLAGS+=-std=c99 -fPIC -Wall -shared -lm
+CFLAGS+=-std=c99 -fPIC -Wall -I./libbs2b-3.1.0/src
 
-SOURCES=bs2b.c
+BS2B_SOURCES=\
+libbs2b-3.1.0/src/bs2b.c
+
+SOURCES=bs2b.c $(BS2B_SOURCES)
 
 OBJECTS=$(SOURCES:.c=.o)
 
 all: $(SOURCES) $(OUT)
 
 $(OUT): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $@ $(BS2B_LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -lm $(OBJECTS) -o $@ $(LDFLAGS)
 
 .c.o:
 	$(CC) $(CFLAGS) $< -c -o $@

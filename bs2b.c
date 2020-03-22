@@ -8,7 +8,7 @@
 */
 
 #include <deadbeef/deadbeef.h>
-#include <bs2b/bs2b.h>
+#include "bs2b.h"
 #include <stdlib.h>
 #include <string.h>
 
